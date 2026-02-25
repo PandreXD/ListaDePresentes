@@ -21,14 +21,16 @@ export default function PixModel({ isOpen, onClose, selectedValue }) {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:3000/create-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          value: selectedValue,
-          name: "Convidado", // se quiser, depois a gente coloca um input pra pegar nome
-        }),
-      });
+     const API_URL = import.meta.env.VITE_API_URL;
+
+const response = await fetch(`${API_URL}/create-payment`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    value: selectedValue,
+    name: "Convidado"
+  }),
+});
 
       const data = await response.json();
       console.log("RETORNO BACKEND:", data);
