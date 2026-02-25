@@ -1,26 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./PixModel.module.scss";
 
 export default function PixModel({ isOpen, onClose, selectedValue }) {
   const [qrCodeBase64, setQrCodeBase64] = useState("");
   const [qrCodeText, setQrCodeText] = useState("");
-  const [paymentId, setPaymentId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | waiting | approved | error
-
-  const pollRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       setQrCodeBase64("");
       setQrCodeText("");
-      setPaymentId("");
-      setStatus("idle");
       setLoading(false);
-    } else {
-      // para polling ao fechar
-      if (pollRef.current) clearInterval(pollRef.current);
-      pollRef.current = null;
     }
   }, [isOpen, selectedValue]);
 
@@ -31,7 +21,6 @@ export default function PixModel({ isOpen, onClose, selectedValue }) {
   const generatePix = async () => {
     try {
       setLoading(true);
-      setStatus("idle");
 
       const response = await fetch(`${API_URL}/create-payment`, {
         method: "POST",
@@ -46,30 +35,9 @@ export default function PixModel({ isOpen, onClose, selectedValue }) {
 
       setQrCodeBase64(data.qr_code_base64 || "");
       setQrCodeText(data.qr_code_text || "");
-      setPaymentId(data.payment_id || "");
-      setStatus("waiting");
-
-      // checa o status a cada 3s
-      if (pollRef.current) clearInterval(pollRef.current);
-
-      pollRef.current = setInterval(async () => {
-        try {
-          if (!data.payment_id) return;
-          const r = await fetch(`${API_URL}/payment-status/${data.payment_id}`);
-          const s = await r.json();
-
-          if (s.status === "approved") {
-            setStatus("approved");
-            clearInterval(pollRef.current);
-            pollRef.current = null;
-          }
-        } catch {
-          // ignore polling errors
-        }
-      }, 3000);
     } catch (e) {
       console.error(e);
-      setStatus("error");
+      alert("Erro ao gerar Pix. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -122,29 +90,9 @@ export default function PixModel({ isOpen, onClose, selectedValue }) {
               Copiar código Pix
             </button>
 
-            {status === "waiting" && (
-              <p style={{ marginTop: 12 }}>
-                ⏳ Aguardando confirmação do pagamento...
-              </p>
-            )}
-
-            {status === "approved" && (
-              <p style={{ marginTop: 12, fontWeight: 800 }}>
-                ✅ Presente confirmado! 🎉 Obrigado pelo presente!
-              </p>
-            )}
-
-            {status === "error" && (
-              <p style={{ marginTop: 12 }}>
-                ❌ Não consegui gerar/confirmar agora. Tente novamente.
-              </p>
-            )}
-
-            {paymentId && (
-              <p style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                ID do pagamento: {paymentId}
-              </p>
-            )}
+            <p style={{ marginTop: 12, opacity: 0.85 }}>
+              Após pagar, o app do seu banco vai confirmar o Pix.
+            </p>
           </div>
         )}
 
