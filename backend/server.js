@@ -7,8 +7,6 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-
-
 app.use(cors());
 
 const client = new MercadoPagoConfig({
@@ -17,8 +15,12 @@ const client = new MercadoPagoConfig({
 
 const paymentApi = new Payment(client);
 
-// “Banco” em memória (simples). 
+// “Banco” em memória (simples)
 const paymentsStore = new Map();
+
+app.get("/", (req, res) => {
+  res.send("OK");
+});
 
 /**
  * 1) Cria pagamento Pix (retorna QR + payment_id)
@@ -26,17 +28,32 @@ const paymentsStore = new Map();
 app.post("/create-payment", async (req, res) => {
   const { value, name = "Convidado" } = req.body;
 
+  // ✅ validação forte do valor
+  const amount = Number(value);
+  if (!amount || Number.isNaN(amount) || amount < 5) {
+    return res.status(400).json({
+      error: "Valor inválido. Use no mínimo R$ 5.",
+      received: value,
+    });
+  }
+
   try {
     const result = await paymentApi.create({
-  body: {
-    transaction_amount: Number(value),
-    description: `Presente casamento - ${name}`,
-    payment_method_id: "pix",
-    payer: {
-      email: "wkpedroff@gmail.com",
-    },
-  },
-});
+      body: {
+        transaction_amount: amount,
+        description: `Presente casamento - ${name}`,
+        payment_method_id: "pix",
+        payer: {
+          email: "wkpedroff@gmail.com",
+          first_name: name,
+          // ✅ ajuda a evitar erros “internal_error” em alguns cenários
+          identification: {
+            type: "CPF",
+            number: "19119119100",
+          },
+        },
+      },
+    });
 
     // Guarda estado inicial
     paymentsStore.set(String(result.id), {
@@ -47,36 +64,43 @@ app.post("/create-payment", async (req, res) => {
       updatedAt: Date.now(),
     });
 
-    res.json({
+    return res.json({
       payment_id: String(result.id),
-      qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64,
-      qr_code_text: result.point_of_interaction.transaction_data.qr_code,
+      qr_code_base64: result?.point_of_interaction?.transaction_data?.qr_code_base64,
+      qr_code_text: result?.point_of_interaction?.transaction_data?.qr_code,
+      status: result.status,
     });
   } catch (error) {
-    console.error("Erro ao criar pagamento:", error);
-    res.status(500).json({ error: "Erro ao criar pagamento" });
+    // ✅ logs completos (Render > Logs)
+    console.error("Erro ao criar pagamento (raw):", error);
+    console.error("Erro ao criar pagamento (message):", error?.message);
+    console.error("Erro ao criar pagamento (cause):", error?.cause);
+    console.error("Erro ao criar pagamento (response.data):", error?.response?.data);
+
+    return res.status(500).json({
+      error: "Erro ao criar pagamento",
+      message: error?.message || null,
+      cause: error?.cause || null,
+      response: error?.response?.data || null,
+    });
   }
 });
 
 /**
  * 2) Endpoint para o frontend consultar status do pagamento
- * - Primeiro tenta no store
- * - Se não tiver (ou quiser garantir), consulta Mercado Pago por ID
  */
 app.get("/payment-status/:id", async (req, res) => {
   const id = String(req.params.id);
 
   try {
-    // Se já temos no store, devolve rápido
     const cached = paymentsStore.get(id);
     if (cached?.status === "approved") {
       return res.json({ status: "approved" });
     }
 
-    // Consulta no MP por ID (referência oficial: GET /v1/payments/{id})
     const mpPayment = await paymentApi.get({ id });
-
     const status = mpPayment.status;
+
     paymentsStore.set(id, {
       id,
       status,
@@ -85,36 +109,39 @@ app.get("/payment-status/:id", async (req, res) => {
 
     return res.json({ status });
   } catch (error) {
-    console.error("Erro ao consultar status:", error);
-    return res.status(500).json({ error: "Erro ao consultar status" });
+    console.error("Erro ao consultar status (raw):", error);
+    console.error("Erro ao consultar status (message):", error?.message);
+    console.error("Erro ao consultar status (cause):", error?.cause);
+    console.error("Erro ao consultar status (response.data):", error?.response?.data);
+
+    return res.status(500).json({
+      error: "Erro ao consultar status",
+      message: error?.message || null,
+      cause: error?.cause || null,
+      response: error?.response?.data || null,
+    });
   }
 });
 
 /**
  * 3) WEBHOOK do Mercado Pago
- * MP manda notificações de eventos (ex: payments) e você consulta o pagamento pelo ID
  */
 app.post("/webhook", async (req, res) => {
   try {
-    // MP normalmente envia algo com type + data.id (padrão docs)
     const type = req.body?.type;
     const dataId = req.body?.data?.id;
 
-    // Alguns casos podem vir via querystring (?type=payment&data.id=123)
     const qType = req.query?.type;
     const qDataId = req.query?.["data.id"];
 
     const finalType = type || qType;
     const finalId = String(dataId || qDataId || "");
 
-    // Responde 200 rápido (boa prática)
+    // responde rápido
     res.sendStatus(200);
 
-    // Só processa se for pagamento e tiver id
     if (!finalId) return;
 
-    // Consulta pagamento no MP e atualiza store
-    // (o webhook “avisa”, mas o status confiável vem do GET payment)
     const mpPayment = await paymentApi.get({ id: finalId });
     const status = mpPayment.status;
 
@@ -126,13 +153,11 @@ app.post("/webhook", async (req, res) => {
 
     console.log("Webhook recebido:", { id: finalId, status, type: finalType });
   } catch (error) {
-    console.error("Erro no webhook:", error);
-    // webhook: mesmo com erro, não precisa retornar 500 após res 200
+    console.error("Erro no webhook (raw):", error);
+    console.error("Erro no webhook (message):", error?.message);
+    console.error("Erro no webhook (cause):", error?.cause);
+    console.error("Erro no webhook (response.data):", error?.response?.data);
   }
-});
-
-app.get("/", (req, res) => {
-  res.send("OK");
 });
 
 const PORT = process.env.PORT || 3000;
