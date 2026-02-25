@@ -28,18 +28,15 @@ app.post("/create-payment", async (req, res) => {
 
   try {
     const result = await paymentApi.create({
-      body: {
-        transaction_amount: Number(value),
-        description: `Presente casamento - ${name}`,
-        payment_method_id: "pix",
-        payer: {
-          email: "teste@email.com",
-          first_name: name,
-        },
-        
-      
-      },
-    });
+  body: {
+    transaction_amount: Number(value),
+    description: `Presente casamento - ${name}`,
+    payment_method_id: "pix",
+    payer: {
+      email: "wkpedroff@gmail.com",
+    },
+  },
+});
 
     // Guarda estado inicial
     paymentsStore.set(String(result.id), {
