@@ -1,0 +1,74 @@
+.countdown {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: white;
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+.timer {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+
+  div {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 1.5rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+
+    span {
+      font-size: 2rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    p {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+@media (min-width: 201px) and (max-width: 500px){
+  .countdown {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: white;
+  
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+.timer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  //border: solid red
+  ;
+
+  div {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 1.5rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+
+    span {
+      font-size: 2rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    p {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+}
+}

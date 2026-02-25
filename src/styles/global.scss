@@ -1,0 +1,16 @@
+@use './variables';
+@use './mixins';
+@use './reset';
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3, #7afcff);
+  min-height: 100vh;
+}
+.giftSection {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap; 
+  padding: 4rem 1rem;
+}

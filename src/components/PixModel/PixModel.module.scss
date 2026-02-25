@@ -1,0 +1,34 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  width: 300px;
+
+  button {
+    margin-top: 1rem;
+    background: #ff758c;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+}
+.pixKey {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  background: #f4f4f4;
+  padding: 0.5rem;
+  border-radius: 8px;
+}

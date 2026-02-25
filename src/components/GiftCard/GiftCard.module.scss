@@ -1,0 +1,101 @@
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.title {
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: #222;
+}
+
+.valueRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.icon {
+  font-size: 22px;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.button {
+  background: linear-gradient(135deg, #ff758c, #ff5c7a);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  width: 100%;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
+
+
+
+@media (max-width: 768px) {
+  .card {
+    padding: 18px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .price {
+    font-size: 18px;
+  }
+
+  .icon {
+    font-size: 20px;
+  }
+}
+
+
+
+@media (max-width: 480px) {
+  .card {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .valueRow {
+    gap: 8px;
+  }
+
+  .price {
+    font-size: 16px;
+  }
+
+  .icon {
+    font-size: 18px;
+  }
+
+  .button {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
